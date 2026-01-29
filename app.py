@@ -8,24 +8,25 @@ def apply_premium_styles():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
         
+        /* 視認性向上のための背景デザイン変更 */
         .stApp {
-            background: linear-gradient(135deg, #f8faff 0%, #e8efff 100%);
+            background: linear-gradient(135deg, #f0f4ff 0%, #d9e2ff 100%);
             font-family: 'Outfit', sans-serif;
         }
 
         .header-box {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
             border-radius: 20px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-            margin-bottom: 25px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
             text-align: center;
         }
 
         .gradient-text {
-            background: linear-gradient(90deg, #2563eb, #7c3aed);
+            background: linear-gradient(90deg, #1e40af, #6d28d9);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 800;
@@ -33,14 +34,33 @@ def apply_premium_styles():
             margin: 0;
         }
 
-        /* カラムの中のカード風スタイル */
-        .column-card {
-            background: white;
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            border: 1px solid #f0f2f6;
-            height: 100%;
+        /* 入力エリアと出力エリアの視認性を高めるカードスタイル */
+        .stTextArea textarea {
+            background-color: white !important;
+            color: #1e293b !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 12px !important;
+            font-size: 1rem !important;
+        }
+
+        /* st.info や st.success の色味を調整して視認性を向上 */
+        .stAlert {
+            background-color: white !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+            border-radius: 16px !important;
+        }
+
+        /* スマホ向けのパディング調整 */
+        @media (max-width: 768px) {
+            .header-box {
+                padding: 16px;
+                margin-bottom: 20px;
+            }
+            .gradient-text {
+                font-size: 1.6rem;
+            }
         }
 
         [data-testid="stStatusWidget"] {
@@ -93,7 +113,7 @@ def generate_with_fallback(prompt):
     raise Exception("コンテンツの生成に失敗しました。")
 
 # Header Area
-st.markdown('<div class="header-box"><h1 class="gradient-text">💬 Mail & Chat Assistant</h1><p style="color: #64748b; margin-top:5px;">相手のトーンを読み取り、最適な返信を左右で同時サポート</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="header-box"><h1 class="gradient-text">💬 Mail & Chat Assistant</h1><p style="color: #475569; margin-top:5px; font-weight: 500;">相手のトーンを読み取り、最適な返信を左右で同時サポート</p></div>', unsafe_allow_html=True)
 
 # Session State
 if 'last_incoming' not in st.session_state:
@@ -167,7 +187,7 @@ with col2:
                     status_msg_reply = st.empty()
                     status_msg_reply.caption("⌛ 相手に合わせた案を構成中...")
                     try:
-                        ref_text = f"相手のメッセージ: {st.session_state.last_incoming}" if st.session_state.last_incoming else "なし"
+                        ref_text = f"相手 of messages: {st.session_state.last_incoming}" if st.session_state.last_incoming else "None"
                         prompt = f"""
                         プロのビジネス翻訳者として、最適な英語返信案を作成してください。
                         [コンテキスト]: {ref_text}
@@ -175,6 +195,7 @@ with col2:
                         [出力構成]:
                         1. AIオススメ（相手のトーンと同期）
                            - 英文
+                           - 戻し訳（※作成した英文を再度日本語に訳したもの。必ず含めてください）
                            - 採用理由（※必ず日本語で説明してください）
                         2. Formal（丁寧）
                            - 英文と日本語訳
@@ -182,13 +203,14 @@ with col2:
                            - 英文と日本語訳
 
                         [重要な指示]:
+                        - 作成した英文がどのようなニュアンスで相手に伝わるかを確認するための「戻し訳（日本語）」をAIオススメには必ず含めてください。
                         - 英文が適切である理由や、ニュアンスの解説は、すべて**日本語**で出力してください。
                         """
                         response, used_model = generate_with_fallback(prompt)
                         status_msg_reply.empty()
                         st.markdown("---")
                         st.markdown(f"#### 📝 AIからの提案 (`{used_model}`)")
-                        st.markdown(response.text)
+                        st.info(response.text) # st.markdown の代わりに st.info を使用して背景とのコントラストを確保
                     except Exception as e:
                         status_msg_reply.empty()
                         st.error(f"エラー: {e}")
@@ -199,7 +221,7 @@ with col2:
 
 st.markdown("""
 <br><br>
-<div style="text-align: center; color: #94a3b8; font-size: 0.8rem;">
+<div style="text-align: center; color: #64748b; font-size: 0.8rem; font-weight: 500;">
     Side-by-Side Context Sync • Multi-Model Fallback Support
 </div>
 """, unsafe_allow_html=True)
