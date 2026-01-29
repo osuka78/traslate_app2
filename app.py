@@ -127,7 +127,7 @@ col1, col2 = st.columns([1, 1], gap="large")
 # ==========================================
 with col1:
     st.markdown("### 📥 届いたメッセージ (英 → 日)")
-    st.caption("英語を貼り付けると自動で翻訳・トーン分析を行います")
+    st.caption("英語を貼り付けると自動で翻訳を行います")
     
     @st.fragment
     def translation_fragment():
@@ -142,17 +142,15 @@ with col1:
         if incoming_text:
             st.session_state.last_incoming = incoming_text
             status_msg = st.empty()
-            status_msg.caption("⌛ 分析中...")
+            status_msg.caption("⌛ 翻訳中...")
             try:
                 prompt = f"""
-                以下の英語のテキストを日本語に翻訳してください。
-                [指示]:
-                1. 媒体（メール/チャット）と相手のトーンを分析し、最適な日本語で翻訳してください。
+                プロの翻訳者として、以下の英語のテキストを自然な日本語に翻訳してください。
                 [英語テキスト]: {incoming_text}
                 """
                 response, used_model = generate_with_fallback(prompt)
                 status_msg.empty()
-                st.markdown(f"#### 🇯🇵 翻訳と分析結果 (`{used_model}`)")
+                st.markdown(f"#### 🇯🇵 翻訳結果 (`{used_model}`)")
                 st.info(response.text)
             except Exception as e:
                 status_msg.empty()
