@@ -1,5 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
+from google.api_core import exceptions
 
 # --- UI Enhancement with Custom CSS ---
 def apply_premium_styles():
@@ -58,11 +59,38 @@ st.set_page_config(page_title="Smart Business Comm", page_icon="💬", layout="w
 apply_premium_styles()
 
 # --- Gemini Configuration ---
-# APIキーはユーザーの変更に合わせて GOOGLE_API_KEY としています
-# 実際には環境変数や st.secrets での管理を推奨します。
 API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash')
+
+# 利用可能なモデルの優先順位リスト（ユーザー提供のリストに基づく）
+MODEL_PRIORITY = [
+    'models/gemini-2.5-flash', 
+    'models/gemini-2.0-flash', 
+    'models/gemini-2.5-flash-lite', 
+    'models/gemini-2.5-pro', 
+    'models/gemini-pro-latest',
+    'models/gemini-exp-1206'
+]
+
+def generate_with_fallback(prompt):
+    """レート制限が発生した場合にモデルを切り替えて再試行する関数"""
+    last_exception = None
+    for model_name in MODEL_PRIORITY:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            return response, model_name
+        except exceptions.ResourceExhausted:
+            # レート制限エラーの場合は次のモデルを試す
+            last_exception = f"Rate limit reached for {model_name}"
+            continue
+        except Exception as e:
+            # その他のエラーはそのままスロー
+            raise e
+    
+    if last_exception:
+        raise Exception(f"すべてのモデルでレート制限に達しました: {last_exception}")
+    raise Exception("コンテンツの生成に失敗しました。")
 
 # Header Area
 st.markdown('<div class="header-box"><h1 class="gradient-text">💬 Mail & Chat Assistant</h1><p style="color: #64748b; margin-top:5px;">相手のトーンを読み取り、最適な返信を左右で同時サポート</p></div>', unsafe_allow_html=True)
@@ -102,9 +130,9 @@ with col1:
                 1. 媒体（メール/チャット）と相手のトーンを分析し、最適な日本語で翻訳してください。
                 [英語テキスト]: {incoming_text}
                 """
-                response = model.generate_content(prompt)
+                response, used_model = generate_with_fallback(prompt)
                 status_msg.empty()
-                st.markdown("#### 🇯🇵 翻訳と分析結果")
+                st.markdown(f"#### 🇯🇵 翻訳と分析結果 (`{used_model}`)")
                 st.info(response.text)
             except Exception as e:
                 status_msg.empty()
@@ -150,10 +178,10 @@ with col2:
                         3. Casual（簡潔）
                         各案に日本語訳を添えてください。
                         """
-                        response = model.generate_content(prompt)
+                        response, used_model = generate_with_fallback(prompt)
                         status_msg_reply.empty()
                         st.markdown("---")
-                        st.markdown("#### 📝 AIからの提案")
+                        st.markdown(f"#### 📝 AIからの提案 (`{used_model}`)")
                         st.markdown(response.text)
                     except Exception as e:
                         status_msg_reply.empty()
@@ -166,6 +194,6 @@ with col2:
 st.markdown("""
 <br><br>
 <div style="text-align: center; color: #94a3b8; font-size: 0.8rem;">
-    Side-by-Side Context Sync • Powered by Gemini 2.5 Flash
+    Side-by-Side Context Sync • Multi-Model Fallback Support
 </div>
 """, unsafe_allow_html=True)
