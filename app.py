@@ -60,7 +60,7 @@ apply_premium_styles()
 # --- Gemini Configuration ---
 # APIキーはユーザーの変更に合わせて GOOGLE_API_KEY としています
 # 実際には環境変数や st.secrets での管理を推奨します。
-API_KEY = "GOOGLE_API_KEY"
+API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
