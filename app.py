@@ -173,10 +173,16 @@ with col2:
                         [コンテキスト]: {ref_text}
                         [入力日本語]: {reply_text}
                         [出力構成]:
-                        1. AIオススメ（相手のトーンと同期）とその理由
+                        1. AIオススメ（相手のトーンと同期）
+                           - 英文
+                           - 採用理由（※必ず日本語で説明してください）
                         2. Formal（丁寧）
+                           - 英文と日本語訳
                         3. Casual（簡潔）
-                        各案に日本語訳を添えてください。
+                           - 英文と日本語訳
+
+                        [重要な指示]:
+                        - 英文が適切である理由や、ニュアンスの解説は、すべて**日本語**で出力してください。
                         """
                         response, used_model = generate_with_fallback(prompt)
                         status_msg_reply.empty()
