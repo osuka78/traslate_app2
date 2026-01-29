@@ -2,64 +2,64 @@ import streamlit as st
 import google.generativeai as genai
 from google.api_core import exceptions
 
-# --- UI Enhancement with Custom CSS ---
+# --- Simplified & High Contrast UI with Custom CSS ---
 def apply_premium_styles():
     st.markdown("""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
-        /* 視認性向上のための背景デザイン変更 */
+        /* 背景は白に近く、文字は真っ黒に近い色でコントラストを最大化 */
         .stApp {
-            background: linear-gradient(135deg, #f0f4ff 0%, #d9e2ff 100%);
-            font-family: 'Outfit', sans-serif;
+            background-color: #fcfcfc;
+            font-family: 'Inter', sans-serif;
         }
 
+        /* ヘッダーを最小限に */
         .header-box {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(16px);
-            border-radius: 20px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
-            text-align: center;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eeeeee;
         }
 
-        .gradient-text {
-            background: linear-gradient(90deg, #1e40af, #6d28d9);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .header-title {
+            color: #000000;
             font-weight: 800;
-            font-size: 2.2rem;
+            font-size: 1.5rem;
             margin: 0;
         }
 
-        /* 入力エリアと出力エリアの視認性を高めるカードスタイル */
+        /* テキストエリアの視認性を極限まで高める */
         .stTextArea textarea {
-            background-color: white !important;
-            color: #1e293b !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 12px !important;
-            font-size: 1rem !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 2px solid #222222 !important;
+            border-radius: 8px !important;
+            font-size: 1.1rem !important;
         }
 
-        /* st.info や st.success の色味を調整して視認性を向上 */
+        /* 回答エリア（st.info）を白背景、黒文字、太い枠線でくっきりさせる */
         .stAlert {
-            background-color: white !important;
-            color: #0f172a !important;
-            border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-            border-radius: 16px !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 2px solid #000000 !important;
+            box-shadow: 4px 4px 0px #eeeeee !important;
+            border-radius: 8px !important;
+        }
+        
+        /* ラベルやキャプションのコントラストも上げる */
+        h3, p, span, label {
+            color: #000000 !important;
+            font-weight: 600 !important;
+        }
+        
+        .stCaption {
+            color: #444444 !important;
         }
 
         /* スマホ向けのパディング調整 */
         @media (max-width: 768px) {
-            .header-box {
-                padding: 16px;
-                margin-bottom: 20px;
-            }
-            .gradient-text {
-                font-size: 1.6rem;
+            .header-title {
+                font-size: 1.2rem;
             }
         }
 
@@ -71,18 +71,28 @@ def apply_premium_styles():
             border: none !important;
             padding: 0 !important;
         }
+
+        /* ボタンを目立たせる */
+        .stButton button {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border-radius: 8px !important;
+            border: none !important;
+            font-weight: 800 !important;
+            padding: 10px 20px !important;
+        }
         </style>
     """, unsafe_allow_html=True)
 
-# Page Config (Wide Layout for side-by-side)
-st.set_page_config(page_title="Smart Business Comm", page_icon="💬", layout="wide")
+# Page Config
+st.set_page_config(page_title="Translator", page_icon="💬", layout="wide")
 apply_premium_styles()
 
 # --- Gemini Configuration ---
 API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=API_KEY)
 
-# 利用可能なモデルの優先順位リスト（ユーザー提供のリストに基づく）
+# 利用可能なモデルの優先順位リスト
 MODEL_PRIORITY = [
     'models/gemini-2.5-flash', 
     'models/gemini-2.0-flash', 
@@ -101,40 +111,37 @@ def generate_with_fallback(prompt):
             response = model.generate_content(prompt)
             return response, model_name
         except exceptions.ResourceExhausted:
-            # レート制限エラーの場合は次のモデルを試す
             last_exception = f"Rate limit reached for {model_name}"
             continue
         except Exception as e:
-            # その他のエラーはそのままスロー
             raise e
     
     if last_exception:
         raise Exception(f"すべてのモデルでレート制限に達しました: {last_exception}")
     raise Exception("コンテンツの生成に失敗しました。")
 
-# Header Area
-st.markdown('<div class="header-box"><h1 class="gradient-text">💬 Mail & Chat Assistant</h1><p style="color: #475569; margin-top:5px; font-weight: 500;">相手のトーンを読み取り、最適な返信を左右で同時サポート</p></div>', unsafe_allow_html=True)
+# Minimal Header
+st.markdown('<div class="header-box"><h1 class="header-title">💬 Translator & Reply</h1></div>', unsafe_allow_html=True)
 
 # Session State
 if 'last_incoming' not in st.session_state:
     st.session_state.last_incoming = ""
 
 # --- Create Two Columns ---
-col1, col2 = st.columns([1, 1], gap="large")
+col1, col2 = st.columns([1, 1], gap="medium")
 
 # ==========================================
 # Left Column: Incoming Translation
 # ==========================================
 with col1:
-    st.markdown("### 📥 届いたメッセージ (英 → 日)")
-    st.caption("英語を貼り付けると自動で翻訳を行います")
+    st.markdown("### 📥 英 → 日")
     
     @st.fragment
     def translation_fragment():
         incoming_text = st.text_area(
             "Receive Area", 
-            height=200, 
-            placeholder="ここに相手からのメールやチャットを貼り付けてください",
+            height=180, 
+            placeholder="英語を入力してください",
             key="inc_input_area_wide",
             label_visibility="collapsed"
         )
@@ -142,7 +149,7 @@ with col1:
         if incoming_text:
             st.session_state.last_incoming = incoming_text
             status_msg = st.empty()
-            status_msg.caption("⌛ 翻訳中...")
+            status_msg.caption("⏳ 翻訳中...")
             try:
                 prompt = f"""
                 プロの翻訳者として、以下の英語のテキストを自然な日本語に翻訳してください。
@@ -150,13 +157,11 @@ with col1:
                 """
                 response, used_model = generate_with_fallback(prompt)
                 status_msg.empty()
-                st.markdown(f"#### 🇯🇵 翻訳結果 (`{used_model}`)")
+                st.markdown(f"**翻訳結果 ({used_model})**")
                 st.info(response.text)
             except Exception as e:
                 status_msg.empty()
                 st.error(f"エラー: {e}")
-        else:
-            st.info("左側のボックスに翻訳したい文章を入力してください。")
 
     translation_fragment()
 
@@ -165,61 +170,54 @@ with col1:
 # Right Column: Reply Creation
 # ==========================================
 with col2:
-    st.markdown("### 📤 返信の作成 (日 → 英)")
-    st.caption("左側のメッセージがある場合、そのトーンを考慮します")
+    st.markdown("### 📤 日 → 英")
     
     @st.fragment
     def reply_fragment():
         with st.form("reply_form_wide"):
             reply_text = st.text_area(
                 "Reply Area", 
-                height=200, 
-                placeholder="例：了解しました。明日までに確認して連絡します。",
+                height=180, 
+                placeholder="返信内容（日本語）を入力してください",
                 key="reply_input_area_wide",
                 label_visibility="collapsed"
             )
-            submit_button = st.form_submit_button("✨ 英語の返信案を生成")
+            submit_button = st.form_submit_button("✨ 英文生成")
 
             if submit_button:
                 if reply_text.strip():
                     status_msg_reply = st.empty()
-                    status_msg_reply.caption("⌛ 相手に合わせた案を構成中...")
+                    status_msg_reply.caption("⏳ 生成中...")
                     try:
-                        ref_text = f"相手 of messages: {st.session_state.last_incoming}" if st.session_state.last_incoming else "None"
+                        ref_text = f"Context: {st.session_state.last_incoming}" if st.session_state.last_incoming else "None"
                         prompt = f"""
                         プロのビジネス翻訳者として、最適な英語返信案を作成してください。
                         [コンテキスト]: {ref_text}
                         [入力日本語]: {reply_text}
                         [出力構成]:
-                        1. AIオススメ（相手のトーンと同期）
-                           - 英文
-                           - 戻し訳（※作成した英文を再度日本語に訳したもの。必ず含めてください）
-                           - 採用理由（※必ず日本語で説明してください）
-                        2. Formal（丁寧）
-                           - 英文と日本語訳
-                        3. Casual（簡潔）
-                           - 英文と日本語訳
+                        1. AIオススメ（英文、戻し訳[日本語]、採用理由[日本語]）
+                        2. Formal（英文、日本語訳）
+                        3. Casual（英文、日本語訳）
 
                         [重要な指示]:
-                        - 作成した英文がどのようなニュアンスで相手に伝わるかを確認するための「戻し訳（日本語）」をAIオススメには必ず含めてください。
-                        - 英文が適切である理由や、ニュアンスの解説は、すべて**日本語**で出力してください。
+                        - 解説・理由はすべて日本語で出力してください。
+                        - AIオススメには戻し訳（日本語）を必ず含めてください。
                         """
                         response, used_model = generate_with_fallback(prompt)
                         status_msg_reply.empty()
-                        st.markdown("---")
-                        st.markdown(f"#### 📝 AIからの提案 (`{used_model}`)")
-                        st.info(response.text) # st.markdown の代わりに st.info を使用して背景とのコントラストを確保
+                        st.markdown(f"**AI案 ({used_model})**")
+                        st.info(response.text)
                     except Exception as e:
                         status_msg_reply.empty()
                         st.error(f"エラー: {e}")
                 else:
-                    st.warning("返信したい内容を入力してください。")
+                    st.warning("内容を入力してください。")
 
     reply_fragment()
 
+# Footer
 st.markdown("""
-<br><br>
-<div style="text-align: center; color: #64748b; font-size: 0.8rem; font-weight: 500;">
-    Side-by-Side Context Sync • Multi-Model Fallback Support
+<div style="text-align: center; color: #000000; font-size: 0.75rem; margin-top: 50px; border-top: 1px solid #eeeeee; padding-top: 10px;">
+    Modern Translator Framework • Multi-Model
 </div>
 """, unsafe_allow_html=True)
